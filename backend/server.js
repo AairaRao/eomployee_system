@@ -1,13 +1,9 @@
-import dns from 'dns';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
-
-// Fixes Atlas SRV DNS issues on some Windows networks
-dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 dotenv.config();
 
@@ -29,11 +25,18 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 
+if (!process.env.MONGO_URI) {
+  console.error('MONGO_URI is missing');
+  process.exit(1);
+}
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('DB connection failed:', err.message);
